@@ -26,6 +26,7 @@ Create the Seurat object with all the data and save Seurat object
 ```{r create Seurat}
 tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, display.progress = T)
 tiss <- AddMetaData(object = tiss, metadata = meta_adult_new, col.name = "Non_ERCC_reads.x")
+save(tiss, file = "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
 ```
 
 Filter the dataset and preprocess 
@@ -94,7 +95,7 @@ pca.scatter = ggpairs(data=temp,
              upper = list(continuous = "points"),
              lower = list(combo = "na"),
              mapping=ggplot2::aes(colour = ExperimentID), legend = 2) + theme(legend.position = "bottom")
-ggsave(plot = pca.scatter, filename = "/Volumes/GoogleDrive/My Drive/NE_Lung/plot_out/I02/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
+ggsave(plot = pca.scatter, filename = "/Volumes/GoogleDrive/My Drive/NE_Lung/plot_out/NE02/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
 ```
 
 

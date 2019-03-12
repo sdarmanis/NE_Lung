@@ -1,0 +1,36 @@
+---
+title: "NE03_Scrublet"
+author: "Spyros Darmanis"
+date: "3/12/2019"
+output: html_document
+---
+
+```{r Load Seurat}
+load("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
+```
+
+Get all experiment IDs and plot a table
+```{r Separate experiment IDs}
+exps <- unique(tiss@meta.data$experiment.ID)
+table(tiss@meta.data$experiment.ID)
+```
+
+
+```{r Divide data by experiment and write matrix to Scrublet output}
+require(Matrix)
+# Get all experiment IDs
+exps <- unique(tiss@meta.data$experiment.ID)
+for(i in 1:length(exps)){
+  # Subset cells and adata for each experiment ID
+  cells <- row.names(tiss@meta.data)[which(tiss@meta.data$experiment.ID==exps[i])]
+  data.temp <- as.matrix(tiss@raw.data[,cells])
+  # Convert to sparse format 
+  data.temp <- Matrix(data.temp, sparse=T)
+  #write.table(data.temp, file=paste("/Volumes/GoogleDrive/My Drive/scrublet/NE_analysis/input/","Exp.ID.", exps[i],".tsv" ,sep=""))
+  writeMM(data.temp, file=paste("/Volumes/GoogleDrive/My Drive/scrublet/NE_analysis/input/","Exp.ID.", exps[i],".mtx" ,sep=""))
+  }
+rm(data.temp)
+```
+
+Run script NE_scrublet_basics to generate doublet score for each cell in each run 
+```{r Divide data by experiment and write matrix to Scrublet output}
