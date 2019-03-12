@@ -1,5 +1,5 @@
 ---
-title: "NE_analysis_Single_cell_workflow"
+title: "NE01_Import_and_create_Seurat"
 author: "Spyros Darmanis"
 date: "3/12/2019"
 output: html_document
@@ -133,7 +133,7 @@ row.names(meta_adult) <- paste(list[,1], list[,2], sep="_")
 ```
 
 Subset adult data 
-```{r Rename cells to well_plateID in data and metadata}
+```{r Subset adult data}
 data_adult <- data_genes[,row.names(meta_adult)]
 dim(data_adult)
 ```
@@ -167,3 +167,16 @@ write.table(data_adult, "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/G
 write.table(meta_adult_new, "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/Metadata_table_adult_NE.tsv")
 ```
 
+
+```{r Change names}
+row.names(meta_adult_new) <- meta_adult_new$cell.id
+```
+
+
+Create the Seurat object with all the data and save Seurat object
+```{r create Seurat}
+require(Seurat)
+tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, display.progress = T)
+tiss <- AddMetaData(object = tiss, metadata = meta_adult_new, col.name = "Non_ERCC_reads.x")
+save(tiss, file = "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
+```
