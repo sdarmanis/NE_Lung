@@ -19,14 +19,20 @@ require(gplots)
 ```
 
 Load Seurat object
+Change "~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData" with the location of the object on 
+your computer
 ```{r Import}
 rm(list=ls())
-load("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData")
+load("~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData")
 tiss
 ```
 
 Remove Scrublet doublets
+I am saving the original object with doublets included as tiss.with.d and that object can be used to analyze the doublets along
+with the singlets. 
+If only looking at singlets than use object tiss (used by default in the rest of the script)
 ```{r Remove doublets}
+tiss.with.d <- tiss
 cells <- row.names(tiss@meta.data)[which(tiss@meta.data$scrublet_doublet == F)]
 tiss <- SubsetData(tiss, cells.use = cells)
 tiss
@@ -94,7 +100,7 @@ pca.scatter = ggpairs(data=temp,
              upper = list(continuous = "points"),
              lower = list(combo = "na"),
              mapping=ggplot2::aes(colour = ExperimentID), legend = 2) + theme(legend.position = "bottom")
-ggsave(plot = pca.scatter, filename = "/Volumes/GoogleDrive/My Drive/NE_Lung/plot_out/NE02/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
+ggsave(plot = pca.scatter, filename = "~/Documents/Labwork/Projects/Biohub/NE_Lung/plot_out/NE02/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
 ```
 
 PCA JackStraw test
@@ -151,6 +157,10 @@ Experiment ID
 TSNEPlot(object = tiss, do.label = F, group.by = "experiment.ID")
 ```
 
+Save object 
+```{r}
+save(tiss,file="~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object_no_doublets.RData")
+```
 
 <!-- Find markers for each cluster -->
 <!-- ```{r} -->
