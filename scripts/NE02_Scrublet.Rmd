@@ -1,0 +1,103 @@
+---
+title: "NE03_Scrublet"
+author: "Spyros Darmanis"
+date: "3/12/2019"
+output: html_document
+---
+
+```{r Load Seurat}
+rm(list=ls())
+load("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
+```
+
+Get all experiment IDs and plot a table
+```{r Separate experiment IDs}
+exps <- unique(tiss@meta.data$experiment.ID)
+table(tiss@meta.data$experiment.ID)
+```
+
+
+```{r Divide data by experiment and write matrix to Scrublet output}
+require(Matrix)
+# Get all experiment IDs
+exps <- c(6,7,8)
+list.names <- list()
+for(i in 1:length(exps)){
+  # Subset cells and adata for each experiment ID
+  cells <- row.names(tiss@meta.data)[which(tiss@meta.data$experiment.ID==exps[i])]
+  list.names[[i]] <- cells
+  paste("Ncells for experiment ID", exps[i], "=", length(cells))
+  message(paste("Ncells for experiment ID", exps[i], "=", length(cells)))
+  data.temp <- as.matrix(tiss@raw.data[,cells])
+  # Convert to sparse format 
+  data.temp <- Matrix(data.temp, sparse=T)
+  colnames(data.temp) <- cells
+  #write.table(data.temp, file=paste("/Volumes/GoogleDrive/My Drive/scrublet/NE_analysis/input/","Exp.ID.", exps[i],".tsv" ,sep=""))
+  writeMM(data.temp, file=paste("/Volumes/GoogleDrive/My Drive/scrublet/NE_analysis/input/","Exp.ID.", exps[i],".mtx" ,sep=""))
+  }
+rm(data.temp)
+```
+
+Run script NE_scrublet_basics to generate doublet score for each cell in each run 
+Import doublet scores for each cell 
+```{r Import and combine doublet scores}
+temp.6 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_6_doubletScore.csv", sep=",")
+colnames(temp.6) <- list.names[[1]]
+temp.7 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_7_doubletScore.csv", sep=",")
+colnames(temp.7) <- list.names[[2]]
+temp.8 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_8_doubletScore.csv", sep=",")
+colnames(temp.8) <- list.names[[3]]
+temp.all <- t(cbind(temp.6, temp.7,temp.8))
+rm(list=c("temp.6", "temp.7","temp.8"))
+# Add to Seurat metadata 
+tiss@meta.data$scrublet_score <-  temp.all[row.names(tiss@meta.data),]
+```
+
+Import doublet scores for each cell 
+```{r Import and combine doublet classification}
+temp.6 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_6_doubletpred.csv", sep=",")
+colnames(temp.6) <- list.names[[1]]
+temp.7 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_7_doubletpred.csv", sep=",")
+colnames(temp.7) <- list.names[[2]]
+temp.8 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_8_doubletpred.csv", sep=",")
+colnames(temp.8) <- list.names[[3]]
+temp.all <- t(cbind(temp.6, temp.7,temp.8))
+rm(list=c("temp.6", "temp.7","temp.8"))
+# Add to Seurat metadata 
+tiss@meta.data$scrublet_doublet <-  temp.all[row.names(tiss@meta.data),]
+tiss@meta.data$scrublet_doublet[tiss@meta.data$scrublet_doublet=="True"] <- T
+tiss@meta.data$scrublet_doublet[tiss@meta.data$scrublet_doublet=="False"] <- F
+```
+
+Save object
+```{r }
+save(tiss, file="/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData")
+```
+
+Do things make sense ? 
+
+```{r Table}
+table(tiss@meta.data$scrublet_doublet)
+```
+
+
+```{r Histogram of all scores by plate}
+hist(tiss@meta.data$scrublet_score, 100) 
+abline(v=0.1, col="red")
+```
+
+```{r Boxplot of all scores by classification}
+boxplot(tiss@meta.data$scrublet_score ~tiss@meta.data$scrublet_doublet)
+```
+
+```{r Boxplot of all scores by plate}
+boxplot(tiss@meta.data$scrublet_score ~tiss@meta.data$experiment.ID)
+```
+
+Check results against previous doublet annotation
+There doesnt seem to be any agreement .. 
+```{r Check with previous doublet annotation}
+table(tiss@meta.data$scrublet_doublet, tiss@meta.data$sum_class)
+```
+
+
