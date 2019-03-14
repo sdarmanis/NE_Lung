@@ -7,7 +7,7 @@ output: html_document
 
 Import master data tables
 ```{r Import}
-#master.data <- read.table("/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/CIRM_master_expression_count_table.tsv", row.names = 1)
+#master.data <- read.table("/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/master_input/CIRM_master_expression_count_table.tsv", row.names = 1)
 ```
 
 
