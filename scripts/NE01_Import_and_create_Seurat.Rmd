@@ -7,14 +7,27 @@ output: html_document
 
 Import master data tables
 ```{r Import}
-master.data <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/input/CIRM_master_expression_count_table.tsv", row.names = 1)
+#master.data <- read.table("/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/CIRM_master_expression_count_table.tsv", row.names = 1)
 ```
 
 
 Subset cells of interest 
 ```{r Subset}
-data <- master.data[,grep("zsGreen", colnames(master.data))]
-dim(data)
+# data <- master.data[,grep("zsGreen", colnames(master.data))]
+# dim(data)
+# write.table(data, file="/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/GC_table_all_zsGreen.tsv")
+```
+
+Set directory
+This is used to save within the repo
+All paths can be changed accordingly
+```{r Set directory}
+dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
+```
+
+```{r Import zsGreen data}
+#rm(list=ls())
+data <- read.table(paste(dir,"input/GC_table_all_zsGreen.tsv",sep=""), row.names = 1, header = T)
 ```
 
 Generate metadata file for cells of interest
@@ -27,8 +40,8 @@ dim(metadata)
 
 Change cell names for the mis-labelled library
 ```{r Correct demux}
-cor_demux <- read.csv("/Volumes/GoogleDrive/My Drive/NE_Lung/input/correct_demux.csv", header=T)
-incor_demux  <- read.csv("/Volumes/GoogleDrive/My Drive/NE_Lung/input/incorrect_demux.csv", header=T)
+cor_demux <- read.csv(paste(dir,"input/correct_demux.csv",sep=""), header=T)
+incor_demux  <- read.csv(paste(dir,"input/incorrect_demux.csv",sep=""), header=T)
 # Correct the names of the cells in the metadata file 
 metadata[,"initial_name"] <- row.names(metadata)
 metadata[,"actual_name"] <- row.names(metadata)
@@ -79,8 +92,7 @@ data_genes[1:5,1:5]
 metadata[,"ERCC_reads"] <- colSums(data_ercc) 
 metadata[,"Non_ERCC_reads"] <- colSums(data_genes) 
 metadata[,"ERCC_to_non_ERCC"] <- metadata[,"ERCC_reads"]/metadata[,"Non_ERCC_reads"]
-head(metadata)
-hist(metadata$Non_ERCC_reads)
+hist(metadata$Non_ERCC_reads, 200, main="N reads all cells")
 ```
 
 ```{r populate metadata, Ngenes}
@@ -89,7 +101,7 @@ for(i in 1:ncol(data_genes)){
   a <- which(row.names(metadata)==colnames(data_genes)[i])
   metadata$Genes_detected[a] <- length(which(data_genes[,i] > 1))
 }
-hist(metadata$Genes_detected)
+hist(metadata$Genes_detected, 200)
 ```
 
 ```{r populate metadata, Age}
@@ -140,7 +152,7 @@ dim(data_adult)
 
 Add annotation of cell type and doublet from previous workflow 
 ```{r consolidate annotations}
-meta.old <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/input/Metadata_adult_lung.txt", header=T, row.names = 1)
+meta.old <- read.table(paste(dir,"input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1)
 # Rename cells of old metadata
 list <- do.call(rbind, strsplit(row.names(meta.old), "-"))
 row.names(meta.old) <- paste(list[,1], list[,2], sep="_")
@@ -151,6 +163,7 @@ meta.old$cell.id <- row.names(meta.old)
 dim(meta_adult)
 dim(meta.old)
 t <- merge(meta_adult, meta.old, all=T, by="cell.id")
+dim(t)
 ```
 
 ```{r Clean combined metadata keeping columns we need}
@@ -161,15 +174,14 @@ table(meta_adult_new$cell.type)
 table(is.na(meta_adult_new$cell.type))
 ```
 
-Write data and metadata
-```{r Write data and metadata tables}
-write.table(data_adult, "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/GC_table_adult_NE.tsv")
-write.table(meta_adult_new, "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/Metadata_table_adult_NE.tsv")
-```
-
-
 ```{r Change names}
 row.names(meta_adult_new) <- meta_adult_new$cell.id
+```
+
+Write data and metadata
+```{r Write data and metadata tables}
+write.table(data_adult, paste(dir,"input/GC_table_adult_NE.tsv",sep=""))
+write.table(meta_adult_new, paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""))
 ```
 
 
@@ -178,5 +190,5 @@ Create the Seurat object with all the data and save Seurat object
 require(Seurat)
 tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, display.progress = T)
 tiss <- AddMetaData(object = tiss, metadata = meta_adult_new, col.name = "Non_ERCC_reads.x")
-save(tiss, file = "/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
+save(tiss, file = paste(dir,"input/NE_Lung_Seurat.RData",sep=""))
 ```
