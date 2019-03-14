@@ -18,12 +18,19 @@ require(reshape)
 require(gplots)
 ```
 
+Set directory
+This is used to save within the repo
+All paths can be changed accordingly
+```{r Set directory}
+dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
+```
+
 Load Seurat object
 Change "~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData" with the location of the object on 
 your computer
 ```{r Import}
-rm(list=ls())
-load("~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData")
+#rm(list=ls())
+load(paste(dir,"input/NE_Lung_Seurat.RData",sep=""))
 tiss
 ```
 
@@ -159,7 +166,7 @@ TSNEPlot(object = tiss, do.label = F, group.by = "experiment.ID")
 
 Save object 
 ```{r}
-save(tiss,file="~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object_no_doublets.RData")
+save(tiss,file=paste(dir,"input/NE_Lung_Seurat_R_object_no_doublets.RData",sep=""))
 ```
 
 <!-- Find markers for each cluster -->
