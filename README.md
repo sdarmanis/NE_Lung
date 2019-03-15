@@ -17,16 +17,9 @@
  rm input.zip
  ```
   
-**3.** From within Rstudio open */scripts/NE01_Import_and_create_Seurat.Rmd* and start from importing all zsGreen cells, creating metadata, Seurat objects, etc.. 
+**3.** From within Rstudio open */scripts/NE04_Seurat_analysis.Rmd* and start from importing data tables and metadata to create a Seurat object. Your options are to load: 
+      *i*. NE cell adult data with doublets included *(GC_table_adult_NE.tsv, Metadata_table_adult_NE.tsv)*
+      *ii*. NE cell adult data set without doublets *(GC_table_adult_NE_ND.tsv, Metadata_table_adult_NE_ND.tsv)*
+      *iii*. NE cell adult data together with all other datasets (+Kransnow,+TabulaMuris) *(GC_table_ALL_datasets.tsv, Metadata_ALL_datasets.tsv)*
 
-**4.** Perform the Scrublet doublet analysis (optional, but if not performed N03 needs to be adjusted to not remove doublets) using */scripts/NE02_Scrublet.Rmd* and */scripts/NE_scrublet_basics.ipynb*. The latter is a Jupyter notebook.
-
-**5.** To continue with the analysis of the adult cells use script */scripts/NE03_Create_seurat_cluster_annotate.Rmd*. Remove annotated doublets if you so like or ignore doublet assignments and continue with the analysis of all cells (see instructions within the script).
-
-
-
-
-
-
-
-
+**Note1.** Scrublet doublet analysis for the NE adult data is performed in *NE02_Scrublet_raw.Rmd* and *NE_scrublet_basics.ipynb*
