@@ -18,8 +18,11 @@
  ```
   
 **3.** From within Rstudio open */scripts/NE04_Seurat_analysis.Rmd* and start from importing data tables and metadata to create a Seurat object. Your options are to load: 
-      *i*. NE cell adult data with doublets included *(GC_table_adult_NE.tsv, Metadata_table_adult_NE.tsv)*
-      *ii*. NE cell adult data set without doublets *(GC_table_adult_NE_ND.tsv, Metadata_table_adult_NE_ND.tsv)*
-      *iii*. NE cell adult data together with all other datasets (+Kransnow,+TabulaMuris) *(GC_table_ALL_datasets.tsv, Metadata_ALL_datasets.tsv)*
+
+*i*. NE cell adult data with doublets included *(GC_table_adult_NE.tsv, Metadata_table_adult_NE.tsv)*
+
+*ii*. NE cell adult data set without doublets *(GC_table_adult_NE_ND.tsv, Metadata_table_adult_NE_ND.tsv)*
+
+*iii*. NE cell adult data together with all other datasets (+Kransnow,+TabulaMuris) *(GC_table_ALL_datasets.tsv, Metadata_ALL_datasets.tsv)*
 
 **Note1.** Scrublet doublet analysis for the NE adult data is performed in *NE02_Scrublet_raw.Rmd* and *NE_scrublet_basics.ipynb*
