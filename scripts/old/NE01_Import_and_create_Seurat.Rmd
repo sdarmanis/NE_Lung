@@ -28,6 +28,7 @@ dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
 ```{r Import zsGreen data}
 #rm(list=ls())
 data <- read.table(paste(dir,"input/GC_table_all_zsGreen.tsv",sep=""), row.names = 1, header = T)
+dim(data)
 ```
 
 Generate metadata file for cells of interest
@@ -188,7 +189,8 @@ write.table(meta_adult_new, paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""
 Create the Seurat object with all the data and save Seurat object
 ```{r create Seurat}
 require(Seurat)
-tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, display.progress = T)
+tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, 
+                           display.progress = T, min.cells = 0,min.genes = 0)
 tiss <- AddMetaData(object = tiss, metadata = meta_adult_new, col.name = "Non_ERCC_reads.x")
 save(tiss, file = paste(dir,"input/NE_Lung_Seurat.RData",sep=""))
 ```

@@ -1,5 +1,5 @@
 ---
-title: "I02_Create_Seurat_cluster_annotate"
+title: "NE03_Create_Seurat_cluster_annotate_Adult_NE_dataset"
 author: "Spyros Darmanis"
 date: "3/12/2019"
 output: html_document
@@ -22,28 +22,32 @@ Set directory
 This is used to save within the repo
 All paths can be changed accordingly
 ```{r Set directory}
+rm(list=ls())
 dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
 ```
 
-Load Seurat object
-Change "~/Documents/Labwork/Projects/Biohub/NE_Lung/processed_input/NE_Lung_Seurat_R_object.RData" with the location of the object on 
-your computer
-```{r Import}
-#rm(list=ls())
-load(paste(dir,"input/NE_Lung_Seurat.RData",sep=""))
-tiss
+<!-- Load data with doublets still there -->
+<!-- ```{r Load data} -->
+<!-- data_adult <- read.table(paste(dir,"input/GC_table_adult_NE.tsv",sep="")) -->
+<!-- meta_adult_new <- read.table(paste(dir,"input/Metadata_table_adult_NE.tsv",sep="")) -->
+<!-- ``` -->
+
+Load data with doublets REMOVED
+```{r Load data}
+data_adult <- read.table(paste(dir,"input/GC_table_adult_NE_ND.tsv",sep=""))
+meta_adult_new <- read.table(paste(dir,"input/Metadata_table_adult_NE_ND.tsv",sep=""))
 ```
 
-Remove Scrublet doublets
-I am saving the original object with doublets included as tiss.with.d and that object can be used to analyze the doublets along
-with the singlets. 
-If only looking at singlets than use object tiss (used by default in the rest of the script)
-```{r Remove doublets}
-tiss.with.d <- tiss
-cells <- row.names(tiss@meta.data)[which(tiss@meta.data$scrublet_doublet == F)]
-tiss <- SubsetData(tiss, cells.use = cells)
-tiss
+
+Load data with doublets still there
+```{r create Seurat}
+require(Seurat)
+tiss <- CreateSeuratObject(raw.data = data_adult, project = "NE_Lung", meta.data = meta_adult_new, 
+                           display.progress = T, min.cells = 0,min.genes = 0)
+tiss <- AddMetaData(object = tiss, metadata = meta_adult_new, col.name = "Non_ERCC_reads.x")
+save(tiss, file = paste(dir,"input/NE_Lung_Seurat.RData",sep=""))
 ```
+
 
 Filter the dataset and preprocess 
 Filtering on 1000 genes minimum and 50000 reads minimum per cell 
@@ -166,7 +170,7 @@ TSNEPlot(object = tiss, do.label = F, group.by = "experiment.ID")
 
 Save object 
 ```{r}
-save(tiss,file=paste(dir,"input/NE_Lung_Seurat_R_object_no_doublets.RData",sep=""))
+save(tiss,file=paste(dir,"processed_input/NE_Lung_Seurat_R_object_no_doublets.RData",sep=""))
 ```
 
 <!-- Find markers for each cluster -->

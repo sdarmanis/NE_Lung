@@ -1,0 +1,127 @@
+---
+title: "NE03_Scrublet_raw"
+author: "Spyros Darmanis"
+date: "3/12/2019"
+output: html_document
+---
+
+```{r Set directory}
+rm(list=ls())
+dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
+```
+
+Load data and metadata
+```{r Write data and metadata tables}
+data_adult <- read.table(paste(dir,"input/GC_table_adult_NE.tsv",sep=""))
+meta_adult_new <- read.table(paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""))
+```
+
+
+Get all experiment IDs and plot a table
+```{r Separate experiment IDs}
+exps <- unique(meta_adult_new$experiment.ID)
+table(meta_adult_new$experiment.ID)
+```
+
+
+```{r Divide data by experiment and write matrix to Scrublet output}
+require(Matrix)
+# Get all experiment IDs
+# exps <- c(6,7,8)
+list.names <- list()
+for(i in 1:length(exps)){
+  # Subset cells and adata for each experiment ID
+  cells <- row.names(meta_adult_new)[which(meta_adult_new$experiment.ID==exps[i])]
+  list.names[[i]] <- cells
+  paste("Ncells for experiment ID", exps[i], "=", length(cells))
+  message(paste("Ncells for experiment ID", exps[i], "=", length(cells)))
+  data.temp <- as.matrix(data_adult[,cells])
+  # Convert to sparse format 
+  data.temp <- Matrix(data.temp, sparse=T)
+  colnames(data.temp) <- cells
+  #write.table(data.temp, file=paste("/Volumes/GoogleDrive/My Drive/scrublet/NE_analysis/input/","Exp.ID.", exps[i],".tsv" ,sep=""))
+  writeMM(data.temp, file=paste(paste(dir,"input/",sep=""),"Exp.ID.", exps[i],".mtx" ,sep=""))
+  }
+rm(data.temp)
+```
+
+Run script NE_scrublet_basics to generate doublet score for each cell in each run 
+Import doublet scores for each cell 
+```{r Import and combine doublet scores}
+temp.6 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_6_doubletScore.csv", sep=""), sep=",")
+colnames(temp.6) <- list.names[[1]]
+temp.7 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_7_doubletScore.csv", sep=""), sep=",")
+colnames(temp.7) <- list.names[[2]]
+temp.8 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_8_doubletScore.csv", sep=""), sep=",")
+colnames(temp.8) <- list.names[[3]]
+temp.all <- t(cbind(temp.6, temp.7,temp.8))
+rm(list=c("temp.6", "temp.7","temp.8"))
+# Add to Seurat metadata 
+meta_adult_new$scrublet_score <-  temp.all[row.names(meta_adult_new),]
+```
+
+Import doublet scores for each cell 
+```{r Import and combine doublet classification}
+temp.6 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_6_doubletpred.csv", sep=""), sep=",")
+colnames(temp.6) <- list.names[[1]]
+temp.7 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_7_doubletpred.csv", sep=""), sep=",")
+colnames(temp.7) <- list.names[[2]]
+temp.8 <- read.table(paste(dir,"input/NE_Lung_Exp.ID_8_doubletpred.csv", sep=""), sep=",")
+colnames(temp.8) <- list.names[[3]]
+temp.all <- t(cbind(temp.6, temp.7,temp.8))
+rm(list=c("temp.6", "temp.7","temp.8"))
+# Add to Seurat metadata 
+meta_adult_new$scrublet_doublet <-  temp.all[row.names(meta_adult_new),]
+meta_adult_new$scrublet_doublet[meta_adult_new$scrublet_doublet=="True"] <- T
+meta_adult_new$scrublet_doublet[meta_adult_new$scrublet_doublet=="False"] <- F
+```
+Do things make sense ? 
+
+```{r Table}
+table(meta_adult_new$scrublet_doublet)
+```
+
+Save data and metadata 
+```{r }
+write.table(data_adult, paste(dir,"input/GC_table_adult_NE.tsv",sep=""))
+write.table(meta_adult_new, paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""))
+```
+
+Remove doublets and save the tables again 
+```{r }
+cells <- row.names(meta_adult_new)[which(meta_adult_new$scrublet_doublet==F)]
+data_adult_ND <- data_adult[,cells]
+# dim(data_adult_ND)
+meta_adult_new_ND <- meta_adult_new[cells,]
+# dim(meta_adult_new_ND)
+```
+
+Save data and metadata 
+```{r }
+write.table(data_adult_ND, paste(dir,"input/GC_table_adult_NE_ND.tsv",sep=""))
+write.table(meta_adult_new_ND, paste(dir,"input/Metadata_table_adult_NE_ND.tsv",sep=""))
+```
+
+
+
+
+```{r Histogram of all scores by plate}
+hist(tiss@meta.data$scrublet_score, 100) 
+abline(v=0.1, col="red")
+```
+
+```{r Boxplot of all scores by classification}
+boxplot(tiss@meta.data$scrublet_score ~tiss@meta.data$scrublet_doublet)
+```
+
+```{r Boxplot of all scores by plate}
+boxplot(tiss@meta.data$scrublet_score ~tiss@meta.data$experiment.ID)
+```
+
+Check results against previous doublet annotation
+There doesnt seem to be any agreement .. 
+```{r Check with previous doublet annotation}
+table(tiss@meta.data$scrublet_doublet, tiss@meta.data$sum_class)
+```
+
+

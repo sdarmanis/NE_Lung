@@ -5,9 +5,14 @@ date: "3/12/2019"
 output: html_document
 ---
 
+
 ```{r Load Seurat}
 rm(list=ls())
 load("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Seurat.RData")
+```
+
+```{r Set directory}
+dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
 ```
 
 Get all experiment IDs and plot a table
@@ -41,7 +46,7 @@ rm(data.temp)
 Run script NE_scrublet_basics to generate doublet score for each cell in each run 
 Import doublet scores for each cell 
 ```{r Import and combine doublet scores}
-temp.6 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_6_doubletScore.csv", sep=",")
+temp.6 <- read.table(paste(dir,"processed_input/NE_Lung_Exp.ID_6_doubletScore.csv", sep=""), sep=",")
 colnames(temp.6) <- list.names[[1]]
 temp.7 <- read.table("/Volumes/GoogleDrive/My Drive/NE_Lung/processed_input/NE_Lung_Exp.ID_7_doubletScore.csv", sep=",")
 colnames(temp.7) <- list.names[[2]]

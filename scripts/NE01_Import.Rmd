@@ -1,0 +1,189 @@
+---
+title: "NE01_Import_and_create_Seurat"
+author: "Spyros Darmanis"
+date: "3/12/2019"
+output: html_document
+---
+
+Import master data tables
+```{r Import}
+#master.data <- read.table("/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/master_input/CIRM_master_expression_count_table.tsv", row.names = 1)
+```
+
+
+Subset cells of interest 
+```{r Subset}
+# data <- master.data[,grep("zsGreen", colnames(master.data))]
+# dim(data)
+# write.table(data, file="/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/GC_table_all_zsGreen.tsv")
+```
+
+Set directory
+This is used to save within the repo
+All paths can be changed accordingly
+```{r Set directory}
+dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
+```
+
+```{r Import zsGreen data}
+#rm(list=ls())
+data <- read.table(paste(dir,"input/GC_table_all_zsGreen.tsv",sep=""), row.names = 1, header = T)
+dim(data)
+```
+
+Generate metadata file for cells of interest
+```{r Create metadata}
+metadata <- as.data.frame(matrix(nrow=ncol(data), ncol=2))
+row.names(metadata) <- colnames(data)
+row.names(metadata) <- gsub("-zsGreen-1-","-zsGreen-1",row.names(metadata))
+dim(metadata)
+```
+
+Change cell names for the mis-labelled library
+```{r Correct demux}
+cor_demux <- read.csv(paste(dir,"input/correct_demux.csv",sep=""), header=T)
+incor_demux  <- read.csv(paste(dir,"input/incorrect_demux.csv",sep=""), header=T)
+# Correct the names of the cells in the metadata file 
+metadata[,"initial_name"] <- row.names(metadata)
+metadata[,"actual_name"] <- row.names(metadata)
+# Given name -> incorrect barcode -> correct name 
+for(i in 1:nrow(metadata)){
+  # get cell name. That name was assigned to a wrong cell. 
+  cell <- metadata$initial_name[i]
+  # which index corresponds to that cell in the wrong sample sheet ? 
+  index <- as.character(incor_demux[which(incor_demux[,2]==cell),"Index"])
+  if(length(index)!=0){
+  # Which cell got the actual index instead of the correct cell ? 
+  metadata[i,"actual_name"] <-  as.character(cor_demux[which(as.character(cor_demux$Index)==index),"SampleID"])}
+}
+```
+
+Now we need to rename the data fields as well 
+Initial name in metadata matches data column names 
+Replace colnames with actual name 
+```{r Fix names}
+colnames(data) <- metadata$actual_name
+row.names(metadata) <- metadata$actual_name
+metadata <- metadata[,-c(3,4)]
+colnames(metadata) <- c("plate", "well")
+list <- strsplit(row.names(metadata), ".", fixed = T)
+for(i in 1:length(list)){
+  metadata$plate[i] <- list[[i]][2]
+  metadata$well[i] <- list[[i]][1]
+}
+rm("list")
+head(metadata)
+```
+
+Populate metadata fields
+
+Clean up GC table
+```{r clean data}
+# Remove stat rows that contain the special character "_"
+data_stats <- data[grep("no_feature", row.names(data)):nrow(data),]
+data_genes <- data[-c(grep("no_feature", row.names(data)):nrow(data)),]
+# Remove ERCC rows 
+ercc_rows <- grep("ERCC-", row.names(data_genes))
+data_ercc <- data_genes[ercc_rows,]
+data_genes <- data_genes[-ercc_rows,]
+data_genes[1:5,1:5]
+```
+
+```{r populate metadata, Nreads}
+metadata[,"ERCC_reads"] <- colSums(data_ercc) 
+metadata[,"Non_ERCC_reads"] <- colSums(data_genes) 
+metadata[,"ERCC_to_non_ERCC"] <- metadata[,"ERCC_reads"]/metadata[,"Non_ERCC_reads"]
+hist(metadata$Non_ERCC_reads, 200, main="N reads all cells")
+```
+
+```{r populate metadata, Ngenes}
+metadata[,"Genes_detected"] <- NA
+for(i in 1:ncol(data_genes)){
+  a <- which(row.names(metadata)==colnames(data_genes)[i])
+  metadata$Genes_detected[a] <- length(which(data_genes[,i] > 1))
+}
+hist(metadata$Genes_detected, 200)
+```
+
+```{r populate metadata, Age}
+require(ggthemes)
+metadata[,"Age"] <- NA 
+metadata[grep("10005001", metadata$plate),"Age"] <- "E14"
+metadata[grep("10005002", metadata$plate),"Age"] <- "E14"
+metadata[grep("10005003", metadata$plate),"Age"] <- "E17.5"
+metadata[grep("10005004", metadata$plate),"Age"] <- "E19.5"
+metadata[grep("10005005", metadata$plate),"Age"] <- "E15"
+metadata[grep("10005006", metadata$plate),"Age"] <- "PN21"
+metadata[grep("1000500608", metadata$plate),"Age"] <- "PN120"
+metadata[grep("1000500609", metadata$plate),"Age"] <- "PN120"
+metadata[grep("10005007", metadata$plate),"Age"] <- "PN120"
+metadata[grep("10005008", metadata$plate),"Age"] <- "PN90"
+metadata$Age <- as.factor(metadata$Age)
+# And color 
+metadata[,"Age_color"] <- tableau_color_pal("tableau20")(20)[metadata$Age]
+table(metadata$Age)
+```
+
+```{r Subset adult cells}
+meta_adult <- metadata[grep("PN", metadata$Age),]
+```
+
+Add experiment ID from plate barcode and add color vector per plate 
+```{r Plate and experiment IDs and color vectors}
+meta_adult$experiment.ID <-  substr(meta_adult$plate,start = 8,stop = 8)
+meta_adult[,"plate_color"] <- tableau_color_pal("tableau20")(20)[as.factor(meta_adult$plate)]
+```
+
+
+Change all cell names to well_plate
+```{r Rename cells to well_plateID in data and metadata}
+# Data
+list <- do.call(rbind, strsplit(colnames(data_genes), ".", fixed=T))
+colnames(data_genes) <- paste(list[,1], list[,2], sep="_")
+# Metadata
+list <- do.call(rbind, strsplit(row.names(meta_adult), ".", fixed=T))
+row.names(meta_adult) <- paste(list[,1], list[,2], sep="_")
+```
+
+Subset adult data 
+```{r Subset adult data}
+data_adult <- data_genes[,row.names(meta_adult)]
+dim(data_adult)
+```
+
+Add annotation of cell type and doublet from previous workflow 
+```{r consolidate annotations}
+meta.old <- read.table(paste(dir,"input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1)
+# Rename cells of old metadata
+list <- do.call(rbind, strsplit(row.names(meta.old), "-"))
+row.names(meta.old) <- paste(list[,1], list[,2], sep="_")
+# Join old and new metadata
+meta_adult$cell.id <- row.names(meta_adult)
+meta.old$cell.id <- row.names(meta.old)
+# Join
+dim(meta_adult)
+dim(meta.old)
+t <- merge(meta_adult, meta.old, all=T, by="cell.id")
+dim(t)
+```
+
+```{r Clean combined metadata keeping columns we need}
+meta_adult_new <- t[,c("cell.id", "plate.x", "well.x", "ERCC_reads.x", "Non_ERCC_reads.x", "ERCC_to_non_ERCC.x", 
+  "Genes_detected.x", "Age.x", "Age_color.x", "experiment.ID", "Cluster_2d", "cell.type", "FSC", "SSC", "APC_Lineage",
+  "DAPI","PE.Cy7_Epcam","zsGreen", "sum_class","pulse.width")]
+table(meta_adult_new$cell.type)
+table(is.na(meta_adult_new$cell.type))
+```
+
+```{r Change names}
+row.names(meta_adult_new) <- meta_adult_new$cell.id
+```
+
+Write data and metadata
+```{r Write data and metadata tables}
+write.table(data_adult, paste(dir,"input/GC_table_adult_NE.tsv",sep=""))
+write.table(meta_adult_new, paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""))
+```
+
+
+
