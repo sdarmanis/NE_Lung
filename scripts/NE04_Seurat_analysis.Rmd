@@ -61,7 +61,7 @@ tiss <- AddMetaData(object = tiss, metadata = meta_adult_new)
 Filter the dataset and preprocess 
 Filtering on 1000 genes minimum and 50000 reads minimum per cell 
 ```{r Filter}
-tiss <- FilterCells(object = tiss, subset.names = c("nGene", "Non_ERCC_reads.x"), 
+tiss <- FilterCells(object = tiss, subset.names = c("nGene", "nUMI"), 
     low.thresholds = c(1000, 50000), high.thresholds = c(Inf, Inf))
 tiss
 ```
