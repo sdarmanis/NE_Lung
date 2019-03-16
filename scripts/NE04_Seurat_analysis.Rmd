@@ -95,7 +95,7 @@ Perform correlation of PCs and metadata fields
 ```{r Correlation of PC coordiantes to metadata fields}
 pca.obj <- tiss@dr$pca
 pc.coords <- pca.obj@cell.embeddings
-df1 <- tiss@meta.data[,c("nGene","Non_ERCC_reads.x","Genes_detected.x")]
+df1 <- tiss@meta.data[,c("nGene","nUMI")]
 df2 <- pc.coords[,c(1:10)]
 cordf12 <- cor(df1,df2)
 # Make a correlation plot
@@ -113,25 +113,25 @@ Plot a few of the principal components
 temp <- tiss@dr$pca@cell.embeddings
 temp <- as.data.frame(temp)
 names <- colnames(temp)
-temp <- cbind(temp, tiss@meta.data$experiment.ID)
-colnames(temp) <- c(names, "ExperimentID")
+temp <- cbind(temp, tiss@meta.data$dataset)
+colnames(temp) <- c(names, "dataset")
 pca.scatter = ggpairs(data=temp,
              columns=1:10, 
              upper = list(continuous = "points"),
              lower = list(combo = "na"),
-             mapping=ggplot2::aes(colour = ExperimentID), legend = 2) + theme(legend.position = "bottom")
-ggsave(plot = pca.scatter, filename = "~/Documents/Labwork/Projects/Biohub/NE_Lung/plot_out/NE02/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
+             mapping=ggplot2::aes(colour = dataset), legend = 2) + theme(legend.position = "bottom")
+ggsave(plot = pca.scatter, filename = "~/Documents/Labwork/Projects/Biohub/NE_Lung/plot_out/NE04/PCA_scatterplots_largefile.pdf",width = 15, height = 12)
 ```
 
-PCA JackStraw test
-```{r echo = T, results = 'hide'}
-tiss <- JackStraw(tiss, num.replicate = 100, num.cores = 2, do.par = T)
-JackStrawPlot(object = tiss, PCs = 1:20)
-```
+<!-- PCA JackStraw test -->
+<!-- ```{r echo = T, results = 'hide'} -->
+<!-- tiss <- JackStraw(tiss, num.replicate = 100, num.cores = 2, do.par = T) -->
+<!-- JackStrawPlot(object = tiss, PCs = 1:20) -->
+<!-- ``` -->
 
 Choose the number of principal components to use.
 ```{r choose PCs}
-n.pcs = 5
+n.pcs = 10
 ```
 
 Set resolution and perform clustering
@@ -152,6 +152,12 @@ Visualize TSNE colored by cluster
 TSNEPlot(object = tiss, do.label = T)
 ```
 
+Plot the fraction of each dataset in each
+```{r}
+tab.1 <- table(tiss@meta.data$dataset,tiss@meta.data$res.0.3)
+balloonplot(tab.1)
+```
+
 
 Color by a gene. Feature plot
 ```{r}
@@ -163,23 +169,23 @@ Color by a gene. Dot plot
 DotPlot(tiss, c("Ascl1", "Epcam", "zsGreen_transgene"))
 ```
 
-Agremeent with previous annotation
-```{r}
-# pdf("/Volumes/GoogleDrive/My Drive/NE_Lung/plot_out/NE02/table_old_vs_new_annotation.pdf",10,10)
-balloonplot(table(tiss@meta.data$res.0.3,tiss@meta.data$cell.type), rowmar=5, colmar=1, cum.margins=T) 
-# dev.off()
-```
+<!-- Agremeent with previous annotation -->
+<!-- ```{r} -->
+<!-- # pdf("/Volumes/GoogleDrive/My Drive/NE_Lung/plot_out/NE02/table_old_vs_new_annotation.pdf",10,10) -->
+<!-- balloonplot(table(tiss@meta.data$res.0.3,tiss@meta.data$cell.type), rowmar=5, colmar=1, cum.margins=T)  -->
+<!-- # dev.off() -->
+<!-- ``` -->
 
 Visualize TSNE metadata field
 Experiment ID
 ```{r}
 # note that you can set do.label=T to help label individual clusters
-TSNEPlot(object = tiss, do.label = F, group.by = "experiment.ID")
+TSNEPlot(object = tiss, do.label = F, group.by = "dataset")
 ```
 
 Save object 
 ```{r}
-save(tiss,file=paste(dir,"processed_input/NE_Lung_Seurat_R_object_no_doublets.RData",sep=""))
+save(tiss,file=paste(dir,"input/All_datasets_ND.RData",sep=""))
 ```
 
 <!-- Find markers for each cluster -->
