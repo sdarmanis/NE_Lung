@@ -5,19 +5,6 @@ date: "3/12/2019"
 output: html_document
 ---
 
-Import master data tables
-```{r Import}
-#master.data <- read.table("/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/master_input/CIRM_master_expression_count_table.tsv", row.names = 1)
-```
-
-
-Subset cells of interest 
-```{r Subset}
-# data <- master.data[,grep("zsGreen", colnames(master.data))]
-# dim(data)
-# write.table(data, file="/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/GC_table_all_zsGreen.tsv")
-```
-
 Set directory
 This is used to save within the repo
 All paths can be changed accordingly
@@ -25,27 +12,43 @@ All paths can be changed accordingly
 dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
 ```
 
-```{r Import zsGreen data}
-#rm(list=ls())
-data <- read.table(paste(dir,"input/GC_table_all_zsGreen.tsv",sep=""), row.names = 1, header = T)
-dim(data)
+
+Import master data tables
+```{r Import}
+master.data <- read.table(paste(dir,"input/master_input/CIRM_master_expression_count_table.tsv",sep=""), row.names = 1)
 ```
 
 
+Subset cells of interest 
+```{r Subset}
+data <- master.data[,grep("zsGreen", colnames(master.data))]
+dim(data)
+# write.table(data, file="/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/input/GC_table_all_zsGreen.tsv")
+```
+
+Change data names to contain "-" instead of "."
+```{r }
+colnames(data) <- gsub(".", "-", colnames(data), fixed = T)
+colnames(data) <- gsub("-zsGreen.*","-zsGreen",colnames(data))
+head(colnames(data))
+```
 
 
 Generate metadata file for cells of interest
 ```{r Create metadata}
 metadata <- as.data.frame(matrix(nrow=ncol(data), ncol=2))
 row.names(metadata) <- colnames(data)
-row.names(metadata) <- gsub("-zsGreen-1-","-zsGreen-1",row.names(metadata))
 dim(metadata)
+head(row.names(metadata))
 ```
 
 Change cell names for the mis-labelled library
 ```{r Correct demux}
-cor_demux <- read.csv(paste(dir,"input/correct_demux.csv",sep=""), header=T)
-incor_demux  <- read.csv(paste(dir,"input/incorrect_demux.csv",sep=""), header=T)
+cor_demux <- read.csv(paste(dir,"input/secondary_input/correct_demux.csv",sep=""), header=T)
+incor_demux  <- read.csv(paste(dir,"input/secondary_input/incorrect_demux.csv",sep=""), header=T)
+# Make sure names are compatible 
+cor_demux$SampleID <- gsub("-zsGreen.*","-zsGreen",cor_demux$SampleID)
+incor_demux$SampleID <- gsub("-zsGreen.*","-zsGreen",incor_demux$SampleID)
 # Correct the names of the cells in the metadata file 
 metadata[,"initial_name"] <- row.names(metadata)
 metadata[,"actual_name"] <- row.names(metadata)
@@ -67,16 +70,52 @@ Replace colnames with actual name
 ```{r Fix names}
 colnames(data) <- metadata$actual_name
 row.names(metadata) <- metadata$actual_name
-metadata <- metadata[,-c(3,4)]
-colnames(metadata) <- c("plate", "well")
-list <- strsplit(row.names(metadata), ".", fixed = T)
+# metadata <- metadata[,-c(3,4)]
+colnames(metadata)[c(1,2)] <- c("plate", "well")
+list <- strsplit(row.names(metadata), "-", fixed = F)
 for(i in 1:length(list)){
   metadata$plate[i] <- list[[i]][2]
   metadata$well[i] <- list[[i]][1]
 }
-rm("list")
+rm("list","incor_demux", "cor_demux", "master.data")
 head(metadata)
 ```
+
+Write data and metadata
+```{r Write data and metadata tables}
+write.table(data, paste(dir,"input/secondary_input/GC_table_zsGreen_renamed.tsv",sep=""))
+write.table(metadata, paste(dir,"input/secondary_input/Metadata_table_zsGreen_renamed.tsv",sep=""))
+```
+
+Check vs last gene tables for  consistency
+```{r}
+data_old <- read.table(paste(dir,"input/old_input/Raw_data_adult_lung.txt",sep=""), row.names = 1, header = T)
+data_new_t <- data
+# Create new names (well+plate)
+mat.a <- do.call(rbind,strsplit(colnames(data_old), ".", fixed=T))[,c(1,2)]
+mat.b <- do.call(rbind,strsplit(colnames(data_new_t), "-", fixed=T))[,c(1,2)]
+#
+names.a <- apply( mat.a[ , c(1:2) ] , 1 , paste , collapse = "-" )
+names.b <- apply( mat.b[ , c(1:2) ] , 1 , paste , collapse = "-" )
+#
+colnames(data_old) <- names.a
+colnames(data_new_t) <- names.b
+# Common subset cells and genes
+data_new <- data_new_t[row.names(data_old),colnames(data_old)]
+# correlation matrix
+mat <- cor(as.matrix(data_new), as.matrix(data_old))
+# For every cell, what is another cell with perfect correlation to it ?
+mat.names <- matrix(ncol=2, nrow=nrow(mat))
+mat.names[,1] <- row.names(mat)
+#
+for(i in 1:nrow(mat.names)){
+  a <- names(which(mat[i,]==1))
+  if(length(a) != 0) {mat.names[i,2] <- a}
+}
+#
+all.equal(mat.names[!is.na(mat.names[,2]),1], mat.names[!is.na(mat.names[,2]),2])
+```
+
 
 Populate metadata fields
 
@@ -129,7 +168,9 @@ table(metadata$Age)
 
 ```{r Subset adult cells}
 meta_adult <- metadata[grep("PN", metadata$Age),]
+dim(meta_adult)
 ```
+
 
 Add experiment ID from plate barcode and add color vector per plate 
 ```{r Plate and experiment IDs and color vectors}
@@ -141,10 +182,10 @@ meta_adult[,"plate_color"] <- tableau_color_pal("tableau20")(20)[as.factor(meta_
 Change all cell names to well_plate
 ```{r Rename cells to well_plateID in data and metadata}
 # Data
-list <- do.call(rbind, strsplit(colnames(data_genes), ".", fixed=T))
+list <- do.call(rbind, strsplit(colnames(data_genes), "-", fixed=F))
 colnames(data_genes) <- paste(list[,1], list[,2], sep="_")
 # Metadata
-list <- do.call(rbind, strsplit(row.names(meta_adult), ".", fixed=T))
+list <- do.call(rbind, strsplit(row.names(meta_adult), "-", fixed=F))
 row.names(meta_adult) <- paste(list[,1], list[,2], sep="_")
 ```
 
@@ -154,38 +195,38 @@ data_adult <- data_genes[,row.names(meta_adult)]
 dim(data_adult)
 ```
 
-Add annotation of cell type and doublet from previous workflow 
-```{r consolidate annotations}
-meta.old <- read.table(paste(dir,"input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1)
-# Rename cells of old metadata
-list <- do.call(rbind, strsplit(row.names(meta.old), "-"))
-row.names(meta.old) <- paste(list[,1], list[,2], sep="_")
-# Join old and new metadata
-meta_adult$cell.id <- row.names(meta_adult)
-meta.old$cell.id <- row.names(meta.old)
-# Join
-dim(meta_adult)
-dim(meta.old)
-t <- merge(meta_adult, meta.old, all=T, by="cell.id")
-dim(t)
-```
+<!-- Add annotation of cell type and doublet from previous workflow  -->
+<!-- ```{r consolidate annotations} -->
+<!-- meta.old <- read.table(paste(dir,"input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1) -->
+<!-- # Rename cells of old metadata -->
+<!-- list <- do.call(rbind, strsplit(row.names(meta.old), "-")) -->
+<!-- row.names(meta.old) <- paste(list[,1], list[,2], sep="_") -->
+<!-- # Join old and new metadata -->
+<!-- meta_adult$cell.id <- row.names(meta_adult) -->
+<!-- meta.old$cell.id <- row.names(meta.old) -->
+<!-- # Join -->
+<!-- dim(meta_adult) -->
+<!-- dim(meta.old) -->
+<!-- t <- merge(meta_adult, meta.old, all=T, by="cell.id") -->
+<!-- dim(t) -->
+<!-- ``` -->
 
-```{r Clean combined metadata keeping columns we need}
-meta_adult_new <- t[,c("cell.id", "plate.x", "well.x", "ERCC_reads.x", "Non_ERCC_reads.x", "ERCC_to_non_ERCC.x", 
-  "Genes_detected.x", "Age.x", "Age_color.x", "experiment.ID", "Cluster_2d", "cell.type", "FSC", "SSC", "APC_Lineage",
-  "DAPI","PE.Cy7_Epcam","zsGreen", "sum_class","pulse.width")]
-table(meta_adult_new$cell.type)
-table(is.na(meta_adult_new$cell.type))
-```
+<!-- ```{r Clean combined metadata keeping columns we need} -->
+<!-- meta_adult_new <- t[,c("cell.id", "plate.x", "well.x", "ERCC_reads.x", "Non_ERCC_reads.x", "ERCC_to_non_ERCC.x", -->
+<!--   "Genes_detected.x", "Age.x", "Age_color.x", "experiment.ID", "Cluster_2d", "cell.type", "FSC", "SSC", "APC_Lineage", -->
+<!--   "DAPI","PE.Cy7_Epcam","zsGreen", "sum_class","pulse.width")] -->
+<!-- table(meta_adult_new$cell.type) -->
+<!-- table(is.na(meta_adult_new$cell.type)) -->
+<!-- ``` -->
 
-```{r Change names}
-row.names(meta_adult_new) <- meta_adult_new$cell.id
-```
+<!-- ```{r Change names} -->
+<!-- row.names(meta_adult_new) <- meta_adult_new$cell.id -->
+<!-- ``` -->
 
 Write data and metadata
 ```{r Write data and metadata tables}
-write.table(data_adult, paste(dir,"input/GC_table_adult_NE.tsv",sep=""))
-write.table(meta_adult_new, paste(dir,"input/Metadata_table_adult_NE.tsv",sep=""))
+write.table(data_adult, paste(dir,"input/secondary_input/GC_table_adult_NE_renamed.tsv",sep=""))
+write.table(meta_adult, paste(dir,"input/secondary_input/Metadata_table_adult_NE_renamed.tsv",sep=""))
 ```
 
 

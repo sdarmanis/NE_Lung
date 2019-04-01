@@ -14,25 +14,25 @@ dir <- "/Users/spyros/Documents/Labwork/Projects/Biohub/NE_Lung/"
 
 Load data with doublets REMOVED
 ```{r Load data}
-data_adult <- read.table(paste(dir,"input/GC_table_adult_NE_from_old_ND.tsv",sep=""))
-meta_adult_new <- read.table(paste(dir,"input/Metadata_table_adult_NE_from_old_ND.tsv",sep=""))
+data_adult <- read.table(paste(dir,"input/secondary_input/GC_table_adult_NE_renamed_ND.tsv",sep=""))
+meta_adult_new <- read.table(paste(dir,"input/secondary_input/Metadata_table_adult_NE_renamed_ND.tsv",sep=""))
 ```
 
 Load additional datasets 
 ```{r Load additional data}
-data.1 <- read.table(paste(dir,"input/Ahmad-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
+data.1 <- read.table(paste(dir,"input/external_datasets/Ahmad-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
 meta.1 <- as.data.frame(matrix(nrow=ncol(data.1),ncol=1))
 meta.1$V1 <- "ahmad"
 colnames(meta.1) <- "dataset"
 row.names(meta.1) <- colnames(data.1)
 # 
-data.2 <- read.table(paste(dir,"input/Kyle-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
+data.2 <- read.table(paste(dir,"input/external_datasets/Kyle-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
 meta.2 <- as.data.frame(matrix(nrow=ncol(data.2),ncol=1))
 meta.2$V1 <- "kyle"
 colnames(meta.2) <- "dataset"
 row.names(meta.2) <- colnames(data.2)
 #
-data.3 <- read.table(paste(dir,"input/Lung-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
+data.3 <- read.table(paste(dir,"input/external_datasets/Lung-counts.tsv",sep=""), sep=",", header = T, row.names = 1)
 meta.3 <- as.data.frame(matrix(nrow=ncol(data.3),ncol=1))
 meta.3$V1 <- "tabula"
 colnames(meta.3) <- "dataset"
@@ -65,6 +65,6 @@ meta.temp <- rbind(meta.all, meta.temp)
 ```
 
 ```{r Write tables}
-write.table(data.temp, paste(dir,"input/GC_table_ALL_datasets_ND.tsv",sep=""))
-write.table(meta.temp, paste(dir,"input/Metadata_ALL_datasets_ND.tsv",sep=""))
+write.table(data.temp, paste(dir,"input/secondary_input/GC_table_ALL_datasets_renamed_ND.tsv",sep=""))
+write.table(meta.temp, paste(dir,"input/secondary_input/Metadata_ALL_datasets_renamed_ND.tsv",sep=""))
 ```
