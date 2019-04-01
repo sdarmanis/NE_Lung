@@ -25,4 +25,7 @@
 
 *iii*. NE cell adult data together with all other datasets (+Kransnow,+TabulaMuris) *(GC_table_ALL_datasets.tsv, Metadata_ALL_datasets.tsv)*
 
+*iv*. If you want to directly import the adult NE cells that we have been already analyzing with the old pipeline, use the objects
+that contain the append "from_old". These would be: *GC_table_adult_NE_from_old, GC_table_adult_NE_from_old_ND, GC_table_ALL_datasets_ND* along with the corresponding metadata tables. 
+
 **Note1.** Scrublet doublet analysis for the NE adult data is performed in *NE02_Scrublet_raw.Rmd* and *NE_scrublet_basics.ipynb*
