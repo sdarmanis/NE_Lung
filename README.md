@@ -16,16 +16,13 @@
  unzip input.zip
  rm input.zip
  ```
-  
-**3.** From within Rstudio open */scripts/NE04_Seurat_analysis.Rmd* and start from importing data tables and metadata to create a Seurat object. Your options are to load: 
+**Note 1.** If you are familiar with Seurat or other packages used to analyze single cell data then you can create the objects required from raw data tables (raw GC tables) and a basic metadata sheet. There are different versions of those within input and they are explained below: 
+*"GC/Metadata"_table_zsGreen_renamed*: All zsGreen cells (fetal and adult) after renaming (pertains to all "renamed" files) to account for incorrect demuux sheet.
+*"GC/Metadata"_table_adult_NE_renamed.tsv*: Same as above, only adult cells
+*"GC/Metadata"_table_adult_NE_renamed_after_Scrublet.tsv*: Same as above, including scrublet analysis metadata fields
+*"GC/Metadata"_table_adult_NE_renamed_ND.tsv*: Same as above, with scrublet identified doublets removed
+*"GC/Metadata"_table_ALL_datasets_renamed_ND.tsv*: Same as above, with Tabula Muris and Krasnow datasets. Those have not been filtered on doublets. 
 
-*i*. NE cell adult data with doublets included *(GC_table_adult_NE.tsv, Metadata_table_adult_NE.tsv)*
+**3.** From within Rstudio open */scripts/NE04_Seurat_analysis.Rmd* and start from importing data tables and metadata to create a Seurat object. Your options are to load any of the files as explained in **Note 1**. 
 
-*ii*. NE cell adult data set without doublets *(GC_table_adult_NE_ND.tsv, Metadata_table_adult_NE_ND.tsv)*
-
-*iii*. NE cell adult data together with all other datasets (+Kransnow,+TabulaMuris) *(GC_table_ALL_datasets.tsv, Metadata_ALL_datasets.tsv)*
-
-*iv*. If you want to directly import the adult NE cells that we have been already analyzing with the old pipeline, use the objects
-that contain the append "from_old". These would be: *GC_table_adult_NE_from_old, GC_table_adult_NE_from_old_ND, GC_table_ALL_datasets_ND* along with the corresponding metadata tables. 
-
-**Note1.** Scrublet doublet analysis for the NE adult data is performed in *NE02_Scrublet_raw.Rmd* and *NE_scrublet_basics.ipynb*
+**Note 2.** Scrublet doublet analysis for the NE adult data is performed in *NE02_Scrublet_raw.Rmd* and *NE_scrublet_basics.ipynb*
