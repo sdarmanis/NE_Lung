@@ -31,6 +31,9 @@ data <- read.table(paste(dir,"input/GC_table_all_zsGreen.tsv",sep=""), row.names
 dim(data)
 ```
 
+
+
+
 Generate metadata file for cells of interest
 ```{r Create metadata}
 metadata <- as.data.frame(matrix(nrow=ncol(data), ncol=2))
