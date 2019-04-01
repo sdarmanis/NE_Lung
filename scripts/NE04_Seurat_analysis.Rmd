@@ -40,11 +40,11 @@ Run the following chuck if you want just NE cells doublets excluded
 <!-- meta_adult_new <- read.table(paste(dir,"input/Metadata_table_adult_NE_ND.tsv",sep="")) -->
 <!-- ``` -->
 
-Run the following chuck if you want ALL cells (+additional datasets) cells doublets excluded
+Run the following chuck if you want ALL cells (+additional datasets) cells doublets excluded from the NE dataset
 Load data 
 ```{r Load data}
-data_adult <- read.table(paste(dir,"input/GC_table_ALL_datasets.tsv",sep=""))
-meta_adult_new <- read.table(paste(dir,"input/Metadata_ALL_datasets.tsv",sep=""))
+data_adult <- read.table(paste(dir,"input/GC_table_ALL_datasets_ND.tsv",sep=""))
+meta_adult_new <- read.table(paste(dir,"input/Metadata_ALL_datasets_ND.tsv",sep=""))
 ```
 
 
