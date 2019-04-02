@@ -83,8 +83,8 @@ head(metadata)
 
 Write data and metadata
 ```{r Write data and metadata tables}
-write.table(data, paste(dir,"input/secondary_input/GC_table_zsGreen_renamed.tsv",sep=""))
-write.table(metadata, paste(dir,"input/secondary_input/Metadata_table_zsGreen_renamed.tsv",sep=""))
+# write.table(data, paste(dir,"input/secondary_input/GC_table_zsGreen_renamed.tsv",sep=""))
+# write.table(metadata, paste(dir,"input/secondary_input/Metadata_table_zsGreen_renamed.tsv",sep=""))
 ```
 
 Check vs last gene tables for  consistency
@@ -195,33 +195,24 @@ data_adult <- data_genes[,row.names(meta_adult)]
 dim(data_adult)
 ```
 
-<!-- Add annotation of cell type and doublet from previous workflow  -->
-<!-- ```{r consolidate annotations} -->
-<!-- meta.old <- read.table(paste(dir,"input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1) -->
-<!-- # Rename cells of old metadata -->
-<!-- list <- do.call(rbind, strsplit(row.names(meta.old), "-")) -->
-<!-- row.names(meta.old) <- paste(list[,1], list[,2], sep="_") -->
-<!-- # Join old and new metadata -->
-<!-- meta_adult$cell.id <- row.names(meta_adult) -->
-<!-- meta.old$cell.id <- row.names(meta.old) -->
-<!-- # Join -->
-<!-- dim(meta_adult) -->
-<!-- dim(meta.old) -->
-<!-- t <- merge(meta_adult, meta.old, all=T, by="cell.id") -->
-<!-- dim(t) -->
-<!-- ``` -->
+Add annotation of cell type and doublet from previous workflow
+```{r consolidate annotations}
+meta.old <- read.table(paste(dir,"input/old_input/Metadata_adult_lung_OLD.txt",sep=""), header=T, row.names = 1)
+# Rename cells of old metadata
+list <- do.call(rbind, strsplit(row.names(meta.old), "-", fixed=F))
+row.names(meta.old) <- paste(list[,1], list[,2], sep="_")
+# Join old and new metadata
+meta_adult$cell.id <- row.names(meta_adult)
+meta.old$cell.id <- row.names(meta.old)
+# Join
+dim(meta_adult)
+dim(meta.old)
+t <- merge(meta_adult, meta.old, all=T, by="cell.id", suffixes=c(".new",".old"))
+dim(t)
+colnames(t)
+meta_adult <- t
+```
 
-<!-- ```{r Clean combined metadata keeping columns we need} -->
-<!-- meta_adult_new <- t[,c("cell.id", "plate.x", "well.x", "ERCC_reads.x", "Non_ERCC_reads.x", "ERCC_to_non_ERCC.x", -->
-<!--   "Genes_detected.x", "Age.x", "Age_color.x", "experiment.ID", "Cluster_2d", "cell.type", "FSC", "SSC", "APC_Lineage", -->
-<!--   "DAPI","PE.Cy7_Epcam","zsGreen", "sum_class","pulse.width")] -->
-<!-- table(meta_adult_new$cell.type) -->
-<!-- table(is.na(meta_adult_new$cell.type)) -->
-<!-- ``` -->
-
-<!-- ```{r Change names} -->
-<!-- row.names(meta_adult_new) <- meta_adult_new$cell.id -->
-<!-- ``` -->
 
 Write data and metadata
 ```{r Write data and metadata tables}

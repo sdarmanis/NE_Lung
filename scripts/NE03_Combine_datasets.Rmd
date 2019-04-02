@@ -49,19 +49,27 @@ meta.all <- rbind(meta.1,meta.2,meta.3)
 boxplot(colSums(data.all)~meta.all$dataset)
 ```
 
-
+Combine metadata
 ```{r make metadata compatible}
-meta.temp <- as.data.frame(matrix(nrow=ncol(data_adult),ncol=1))
-meta.temp$V1 <- "NE"
-colnames(meta.temp) <- "dataset"
-row.names(meta.temp) <- colnames(data_adult)
+# Add dataset to our data 
+meta_adult_new$dataset <- "NE"
+#
+mat.temp <- as.data.frame(matrix(nrow=nrow(meta.all), ncol=ncol(meta_adult_new)))
+colnames(mat.temp) <- colnames(meta_adult_new)
+# 
+mat.temp$dataset <- meta.all$dataset
+# 
+row.names(mat.temp) <- row.names(meta.all)
+# Now combine mat.temp with meta_adult 
+meta.temp <- rbind(meta_adult_new, mat.temp)
 ```
 
+
+Combine data
 ```{r Combine all}
 data.temp <- merge(data.all, data_adult, by = 0)
 row.names(data.temp) <- data.temp$Row.names
 data.temp <- data.temp[,-grep("Row.names",colnames(data.temp))]
-meta.temp <- rbind(meta.all, meta.temp)
 ```
 
 ```{r Write tables}

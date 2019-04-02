@@ -14,6 +14,7 @@ Load data and metadata
 ```{r Write data and metadata tables}
 data_adult <- read.table(paste(dir,"input/secondary_input/GC_table_adult_NE_renamed.tsv",sep=""), check.names = F)
 meta_adult_new <- read.table(paste(dir,"input/secondary_input/Metadata_table_adult_NE_renamed.tsv",sep=""), check.names = F)
+row.names(meta_adult_new) <- meta_adult_new$cell.id
 ```
 
 Create experiment ID
@@ -23,7 +24,7 @@ N: project ID
 K: experiment ID
 ZZ:plate ID (within each experiment)
 ```{r Separate experiment IDs}
-meta_adult_new$experiment.ID <- substr(meta_adult_new$plate, 8,8)
+meta_adult_new$experiment.ID <- substr(meta_adult_new$plate.new, 8,8)
 table(meta_adult_new$experiment.ID)
 exps <- unique(meta_adult_new$experiment.ID)
 ```
